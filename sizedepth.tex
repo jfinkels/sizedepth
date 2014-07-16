@@ -1,0 +1,227 @@
+%% sizedepth.tex - Size-depth tradeoffs for nondeterministic circuits
+%%
+%% Copyright 2014 Jeffrey Finkelstein.
+%%
+%% This LaTeX markup document is made available under the terms of the Creative
+%% Commons Attribution-ShareAlike 4.0 International License,
+%% https://creativecommons.org/licenses/by-sa/4.0/.
+\documentclass{article}
+
+%% This must come before hyperref.
+\usepackage{amsthm}
+%% This must come before hyperref.
+\usepackage{thmtools}
+%% This must come before complexity.
+\usepackage{hyperref}
+%% This is strongly recommended by biblatex.
+\usepackage[english]{babel}
+%% This is strongly recommended by biblatex.
+\usepackage{csquotes}
+\usepackage[backend=biber]{biblatex}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{complexity}
+
+\hypersetup{pdftitle={Size-depth-alternation tradeoffs for circuits}, pdfauthor={Jeffrey Finkelstein}}
+
+\addbibresource{sizedepth.bib}
+
+\declaretheorem[numberwithin=section]{theorem}
+\declaretheorem[numberlike=theorem]{lemma}
+\declaretheorem[numberlike=theorem]{corollary}
+\declaretheorem[numberlike=theorem, style=definition]{definition}
+
+\newcommand{\Q}{\mathsf{Q}}
+
+\title{Size-depth-alternation tradeoffs for circuits}
+\author{Jeffrey Finkelstein}
+
+\begin{document}
+
+\maketitle
+
+A \emph{Boolean circuit} is a directed acyclic graph with some designated input gates of fan-in zero and one designated output gate of fan-out zero in which all non-input nodes are labeled with \textsc{or}, \textsc{and}, or \textsc{not}.
+All \textsc{or} and \textsc{and} gates have fan-in two, and all \textsc{not} gates fan-in one.
+We assume that the gates of a Boolean circuit are arranged in \emph{layers}; each layer consists of gates whose inputs come only from the previous layer and whose outputs feed only the following layer.
+The \emph{depth}, or \emph{layer number}, of a gate is the length of the shortest path from any input node to the gate; the depth of the circuit is the depth of the output gate.
+The input gates are in the first layer and the output gate is in the last layer.
+We assume that the first layer after the input layer consists of only \textsc{not} gates, and no \textsc{not} gates appear anywhere else.
+
+A \emph{configuration} of a Boolean circuit is a triple $(1^n, i, w)$, where $n$ is the number of inputs, $i$ is the layer number (in binary), and $w$ is the contents of the wires after layer $i$ (given as a single binary string).
+If $C$ is a circuit, configuration $(1^n, i, u)$ \emph{yields} configuration $(1^n, i + 1, v)$ if layer $i + 1$ of the circuit produces output bits $v$ when provided with input bits $w$.
+Configuration $(1^n, i, u)$ \emph{yields} configuration $(1^n, i + t, v)$ within $t$ steps of there is a sequence of binary strings $w_0, \dotsc, w_t$ such that
+\begin{itemize}
+\item $u = w_0$
+\item $(1^n, i + k, w_k)$ yields $(1^n, i + k + 1, w_{k + 1})$ for all $k \in \{0, \dotsc, t - 1\}$
+\item $w_t = v$
+\end{itemize}
+
+A family of circuits $\{C_n\}_{n \in \mathbb{N}}$ is $\L$-uniform if there is a Turing machine $M$ such that $M(1^n)$ halts within $O(\log n)$ space and outputs $C_n$.
+
+\begin{definition}
+  A language $L$ is decided by a $\Sigma_k$ circuit family $\{C_n\}_{n \in \mathbb{N}}$ if for any input string $x$,
+  \begin{equation*}
+    x \in L \iff \exists w_1 \forall w_2 \dotsb \Q_k w_k \colon C_n(x, w_1, \dotsc, w_k) = 1,
+  \end{equation*}
+  where $\Q_k$ is $\exists$ if $k$ is odd and $\forall$ if $k$ is even.
+\end{definition}
+
+\begin{definition}
+  $\Sigma_k \SDG(s, d, g)$ is the class of languages that are decidable by an $\L$-uniform $\Sigma_k$ circuit family of size $s(n)$, depth $d(n)$, and $g(n)$ existential or universal bits at each quantifier.
+\end{definition}
+
+\begin{lemma}\label{lem:yields}
+  Let $n$ be a natural number and let $A_n$ be a circuit on $n$ inputs of size $s$ and depth $d$.
+  The problem of deciding whether configuration $C_i$ of circuit $A_n$ yields configuration $C_j$ within $t$ layers is in $\SD((n + s + \log d) + t(d + s), t + \log s)$.
+\end{lemma}
+\begin{proof}
+  The circuit that decides this problem simulates $A_n$ for $t$ layers, then checks if any of those layers matches the target configuration $C_j$.
+  Suppose $C_i = (1^n, i, w_i)$ and $C_j = (1^m, j, w_j)$.
+  The circuit we construct will check that
+  \begin{itemize}
+  \item $n = m$
+  \item $j < i + t$
+  \item If layer $k$ of circuit $A_n$ is denoted $L_k$, then at least one of the layers $L_i, \dotsc, L_{i + t}$, when given $w_i$ as input, should output $w_j$
+  \end{itemize}
+  Assuming $m$ is in $O(n)$, checking the equality of $n$ and $m$ requires a circuit of size $O(n)$ and depth $O(\log n)$.
+  TODO finish me\ldots
+\end{proof}
+
+An increased number of alternations can simulate a circuit that would normally have greater depth.
+This is the circuit complexity analog of the corresponding result for Turing machines, described in \autocite[Lemma~2.7]{williams06}, therein attributed to \autocite[Theorem~5.1]{fvm00}.
+(The $\Sigma_k$ algorithm in those works is given as a recursive alternating Turing machine algorithm; in this work, we have unwrapped the recursion so that it more closely matches the definition of $\Sigma_k \SDG$.)
+
+\begin{lemma}
+  For all $b$, $k$, $s$, and $d$,
+  \begin{equation*}
+    \SD(s, d) \subseteq \Sigma_k \SDG(s', d', g') % \cap \Pi_k \SDG(s', d', g')
+  \end{equation*}
+  where
+  \begin{itemize}
+  \item $s' = k b (n + s + \log d) + \frac{d}{b^{k - 1}}(d + s)$
+  \item $d' = O(\max(\log b k (n + s + \log d), \frac{d}{b^{k - 1}} + \log s))$
+  \item $g' = b (n + s + \log d)$
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+  Let $L$ be a language in $\SD(s, d)$, and let $\{A_n\}_{n \in \mathbb{N}}$ be the $\L$-uniform circuit family that decides it.
+  Suppose $M$ is the $O(\log n)$ space Turing machine that outputs $A_n$ on input $1^n$.
+  First we show a $\Sigma_{2k}$ circuit family that decides $L$, then we modify it to provide a $\Sigma_k$ circuit family.
+
+  Let $n$ be an arbitrary natural number and let $x$ be a binary string of length $n$.
+  Suppose $C_0$ is the initial configuration of $A_n$ with input $x$ and $C_{d + 1}$ is the accepting configuration.
+  Consider the $\Sigma_{2k}$ formula
+  \begin{equation}\label{eq:2k}
+    \exists C^k \forall r_k \dotsb \exists C^1 \forall r_1 \colon B_n(x, C^k, \dotsc, C^1, r_k, \dotsc, r_1) = 1,
+  \end{equation}
+  where each $C^i$ is a vector of $b$ circuit configurations and each $r_i$ is a binary integer in $\{1, \dotsc, b\}$.
+  The Boolean circuit $B_n$ computes the conjunction of the following three formulas.
+  \begin{align}
+    & C_0 = C^k_1 \land C^k_b = C_{d + 1} \label{frm:1} \\
+    & \bigwedge^k_{i = 2} \left(C^i_{r_i} = C^{i - 1}_1 \land C^{i - 1}_b = C^i_{r_i + 1} \right) \label{frm:2} \\
+    & C^1_{r_1} \text{ yields } C^1_{r_1 + 1} \text{ within } \frac{d}{b^{k - 1}} \text{ layers} \label{frm:3}
+  \end{align}
+  The first formula ensures that the initial configuration and the accepting configuration of the circuit are correctly guessed as the first and last configurations.
+  The second formula ensures that the guessed sequence of configurations is a valid sequence.
+  The third formula ensures that one of the guessed sequences of configurations correctly computes the original circuit $A_n$.
+  Let us prove that this is an \L-uniform $\Sigma_{2k} \SDG(s', d', g')$ circuit family that decides the language $L$.
+
+  First, we must prove \L-uniformity.
+  (TODO show \L-uniformity\ldots)
+
+  Next, let's determine the size and depth of the circuit.
+  Each configuration requires $O(n + s + \log d)$ bits to describe; let $S$ denote this value.
+  Selecting $C^i_{r_i}$ from the sequence $C^i$ requires a multiplexer in which each input has $O(S)$ bits, there are $b$ such inputs, and the selector $r_j$ has $\left\lceil\log b\right\rceil$ bits.
+  This can be implemented by $O(S)$ single-bit multiplexers working in parallel.
+  A multiplexer for $b$ input bits can be implemented by a circuit of size $O(b)$ and depth $O(\log b)$ \autocite[Lemma~2.5.5]{savage98}.
+  Thus the full multiplexer requires size $O(b S)$ and depth $O(\log b)$.
+
+  Formula~\eqref{frm:1} contains two equality checks and requires two multiplexers.
+  Checking equality of two configurations requires a tree of \textsc{and} gates of size $O(S)$ and depth $O(\log S)$.
+  It can therefore be implemented with a circuit of size $O(b S)$ and depth $O(\log b + \log S)$, or more simply $O(\log b S)$.
+
+  Formula~\eqref{frm:2} contains $O(k)$ equality checks, multiplexers, and increments of $r_i$.
+  Computing $r_i + 1$ from $r_i$ requires a circuit of size $O(\log b)$ and depth $O(\log \log b)$.
+  Each equality check, multiplexer, and increment can be performed in parallel, and the conjunction of these $O(k)$ bits can be computed by a tree of \textsc{and} gates of size $O(k)$ and depth $O(\log k)$.
+  Therefore, this formula can be implemented with a circuit of size $O(k b S)$ and depth $O(\log b + \log S + \log k)$, or more simply $O(\log b k S)$.
+  
+  By \autoref{lem:yields}, formula~\eqref{frm:3} can be implemented by a circuit of size $O(S + \frac{d}{b^{k - 1}}(d + s))$ and depth $O(\frac{d}{b^{k - 1}} + \log s)$.
+  Combining the three formulas with a conjunction requires only $O(1)$ more \textsc{and} gates so the overall size of the circuit $B_n$ is the sum of the sizes of the circuits computing the three formulas above, and the depth of the circuit is the maximum of the three depths.
+  Therefore, the size of $B_n$ is $O(k b S + \frac{d}{b^{k - 1}} (d + s))$ and the depth is $O(\max(\log b k S, \frac{d}{b^{k - 1}} + \log s))$.
+  Furthermore, each existential quantifier guesses $O(b S)$ bits and each universal quantifier guesses $O(\log b)$ bits, so the number of bits guessed at each quantifier is bounded by $O(b S)$.
+
+  (TODO show correctness\ldots)
+
+  Now we must eliminate half the alternations in formula~\eqref{eq:2k}.
+  To do this, we ``negate'' every other pair of quantifiers, along with the corresponding equality checks in the circuit $B_n$.
+  (TODO explain why this is possible\ldots)
+  Two quantifiers of the same type that appear next to one another can be collapsed to a single quantifier of that type; the number of bits guessed at each quantifier remains $O(b S)$.
+  So in the case that $k$ is even, formula~\eqref{eq:2k} becomes
+  \begin{equation}\label{frm:k}
+    \exists C^k \forall r_k \forall C^{k - 1} \exists r_{k - 1} \dotsb \exists C^2 \forall r_1 \forall C^2 \exists r_1 \colon B'_n(x, C^k, \dotsc, C^1, r_k, \dotsc, r_1) = 1,
+  \end{equation}
+  where $B'_n$ represents $B_n$ with the following two modifications.
+  First, whenever $i$ is even in formula~\eqref{frm:2}, replace $C^{i - 1}_b = C^i_{r_i + 1}$ with its negation.
+  Second, if $k$ is even, replace formula~\eqref{frm:3} with its negation.
+  These modifications will not affect the size or depth of the circuit, except by small constant factors.
+  Thus formula~\eqref{frm:k} represents a $\Sigma_k \SDG(s', d', g')$ circuit that correctly decides $L$, concluding the proof.
+\end{proof}
+
+Our goal is to choose $b$ in order to minimize the depth $d'$ of the $\Sigma_k$ circuit.
+We wish to minimize $d'$, so we consider $\log k b S$ and $\frac{d}{b^{k - 1}} + \log s$ as functions of $b$, where $S = s + n + \log d$ as in the previous lemma.
+The former function is monotonically increasing and the latter monotonically decreasing.
+The smallest value of the maximum of the two functions is achieved when the two functions have the same value.
+Solving the equation $\log k b S = \frac{d}{b^{k - 1}} + \log s$ for $b$ yields the equation $b = \ldots$.
+This choice of $b$ yields complicated expressions for the values of $s'$, $d'$, and $g'$, and is ultimately uninformative (to me).
+In order to find a simpler expression for $d'$, we relax the depth $d'$ from the maximum to the sum.
+
+\begin{corollary}
+  For all $k$, $s$, and $d$,
+  \begin{equation*}
+    \SD(s, d) \subseteq \Sigma_k \SDG(s', d', g') % \cap \Pi_k \SDG(s', d', g')
+  \end{equation*}
+  where
+  \begin{itemize}
+  \item $s' = k S (d (k - 1))^{\frac{1}{k - 1}} + \frac{d + s}{k - 1}$
+  \item $d' = \log\left(k S (d (k - 1))^{\frac{1}{k - 1}}\right) + \frac{1}{k - 1} + \log s$
+  \item $g' = S (d (k - 1))^{\frac{1}{k - 1}}$
+  \end{itemize}
+\end{corollary}
+\begin{proof}
+  Let $S = n + s + \log d$ as in the previous lemma.
+  We know that
+  \begin{equation*}
+    \max(\log k b S, \frac{d}{b^{k - 1}} + \log s) \leq \log k b S + \frac{d}{b^{k - 1}} + \log s
+  \end{equation*}
+  as long as all the variables are positive, so any circuit with depth given by the left side of the inequality can be simulated by a circuit with depth given by the right side (by padding with the appropriate number of layers computing the identity function).
+  If we view $\log k b S + \frac{d}{b^{k - 1}} + \log s$ as a function of $b$, the minimum is achieved when $\frac{1}{b} + d (1 - k) b^{-k}$, the first derivative respect to $b$, is zero.
+  Since $b$ is positive, this occurs exactly when $b = (d (k - 1))^{\frac{1}{k - 1}}$.
+  This setting of $b$ yields the following values for $s'$, $d'$, and $g'$.
+  \begin{itemize}
+  \item $s' = k S (d (k - 1))^{\frac{1}{k - 1}} + \frac{d + s}{k - 1}$
+  \item $d' = \log\left(k S (d (k - 1))^{\frac{1}{k - 1}}\right) + \frac{1}{k - 1} + \log s$
+  \item $g' = S (d (k - 1))^{\frac{1}{k - 1}}$ \qedhere
+  \end{itemize}
+\end{proof}
+
+\begin{corollary}
+  \begin{equation*}
+    \P \subseteq \Sigma_2 \SDG(\poly, \log n, \poly).
+  \end{equation*}
+\end{corollary}
+\begin{proof}
+  $\P$ is exactly the class of languages decidable by $\L$-uniform polynomial size circuits \autocite[Theorem~6.15]{ab09}.
+  In other words, $\P = \SD(\poly, \poly)$.
+  By the previous corollary, $\SD(\poly, \poly) \subseteq \Sigma_k (\poly, \log, \poly)$ for any $k \geq 2$.
+  Thus $\P \subseteq \Sigma_2 \SDG(\poly, \log n, \poly)$.
+\end{proof}
+
+Unfortunately, this corollary is weaker than already known results:
+\begin{equation*}
+  \P \subseteq \NP \subseteq \NNC^1(\poly) \subseteq \Sigma_1 \SDG(\poly, \log n, \poly) \subseteq \Sigma_2 \SDG(\poly, \log n, \poly)
+\end{equation*}
+(The second inclusion comes from \autocite[Theorem~2.2]{wolf94}.)
+
+\printbibliography
+
+\end{document}
