@@ -7,20 +7,48 @@
 %% https://creativecommons.org/licenses/by-sa/4.0/.
 \documentclass{article}
 
+\usepackage{amsmath}
+\usepackage{amssymb}
 %% This must come before hyperref.
 \usepackage{amsthm}
+%% This is strongly recommended by biblatex.
+\usepackage[english]{babel}
+\usepackage[backend=biber]{biblatex}
+\usepackage[T1]{fontenc}
+%% This must come before csquotes.
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+%% This is strongly recommended by biblatex.
+\usepackage{csquotes}
 %% This must come before hyperref.
 \usepackage{thmtools}
 %% This must come before complexity.
 \usepackage{hyperref}
-%% This is strongly recommended by biblatex.
-\usepackage[english]{babel}
-%% This is strongly recommended by biblatex.
-\usepackage{csquotes}
-\usepackage[backend=biber]{biblatex}
-\usepackage{amsmath}
-\usepackage{amssymb}
 \usepackage{complexity}
+\usepackage[firstpage]{draftwatermark}
+\usepackage{microtype}
+\usepackage{textcomp}
+
+\LoadMicrotypeFile{cmr}
+\SetProtrusion
+    [load=lmr-T1]
+    {encoding=T1, family=lmr}
+    {
+      \textquotedblright = {,1000},
+      \textquotedblleft = {1000,},
+      {'} = {,1000},
+      {[} = {1000,},
+      {]} = {,1000},
+      {,} = {,1000},
+      {:} = {,1000},
+      {;} = {,1000},
+      {.} = {,1000}
+    }
+
+%% Set the ``work-in-progress'' watermark for the first page.
+\SetWatermarkLightness{0.9}
+\SetWatermarkText{Work-in-progress}
+\SetWatermarkFontSize{3.5cm}
 
 \hypersetup{pdftitle={Size-depth-alternation tradeoffs for circuits}, pdfauthor={Jeffrey Finkelstein}}
 
@@ -31,7 +59,14 @@
 \declaretheorem[numberlike=theorem]{corollary}
 \declaretheorem[numberlike=theorem, style=definition]{definition}
 
+%% Custom commands are declared here.
+\newcommand{\email}[1]{\textlangle\href{mailto:#1}{\nolinkurl{#1}}\textrangle}
+\newcommand{\todo}[1]{\textbf{TODO #1}}
 \newcommand{\Q}{\mathsf{Q}}
+
+%% Redefine the footnote environment so it has no reference and no number.
+\long\def\symbolfootnote#1{\begingroup%
+\def\thefootnote{\fnsymbol{footnote}}\footnotetext{#1}\endgroup}
 
 \title{Size-depth-alternation tradeoffs for circuits}
 \author{Jeffrey Finkelstein}
@@ -39,6 +74,14 @@
 \begin{document}
 
 \maketitle
+
+\symbolfootnote{%
+  Copyright 2014 Jeffrey~Finkelstein \email{jeffreyf@bu.edu}.
+
+  This document is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License, which is available at \mbox{\url{https://creativecommons.org/licenses/by-sa/4.0/}}.
+  The \LaTeX{} markup that generated this document can be downloaded from its website at \mbox{\url{https://github.com/jfinkels/sizedepth}}.
+  The markup is distributed under the same license.
+}
 
 A \emph{Boolean circuit} is a directed acyclic graph with some designated input gates of fan-in zero and one designated output gate of fan-out zero in which all non-input nodes are labeled with \textsc{or}, \textsc{and}, or \textsc{not}.
 All \textsc{or} and \textsc{and} gates have fan-in two, and all \textsc{not} gates fan-in one.
@@ -204,7 +247,7 @@ In order to find a simpler expression for $d'$, we relax the depth $d'$ from the
   \end{itemize}
 \end{proof}
 
-\begin{corollary}
+\begin{corollary}\label{cor:pinsigma2}
   \begin{equation*}
     \P \subseteq \Sigma_2 \SDG(\poly, \log n, \poly).
   \end{equation*}
@@ -221,6 +264,9 @@ Unfortunately, this corollary is weaker than already known results:
   \P \subseteq \NP \subseteq \NNC^1(\poly) \subseteq \Sigma_1 \SDG(\poly, \log n, \poly) \subseteq \Sigma_2 \SDG(\poly, \log n, \poly)
 \end{equation*}
 (The second inclusion comes from \autocite[Theorem~2.2]{wolf94}.)
+The limiting factor in this technique is the size of a configuration of the circuit.
+The number of gates in a single layer may be $O(s(n))$, and $s(n)$ is assumed to be a polynomial in $n$ (in the worst case).
+If there were some sub-polynomial upper bound on the width of each layer of the circuit being simulated, then we could potentially improve the unsatisfying \autoref{cor:pinsigma2}.
 
 \printbibliography
 
